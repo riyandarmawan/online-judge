@@ -85,16 +85,13 @@ def visible_session_ids(request):
     user = getattr(request, "user", None)
     if user and user.is_authenticated and user.is_admin_role():
         return None
+    if not user or not user.is_authenticated:
+        return []
     allowed = []
     unlocked = unlocked_session_ids(request)
     for session in ExamSession.objects.filter(id__in=unlocked):
-        if not user or not user.is_authenticated:
-            # Unauthenticated users can view ARCHIVE mode sessions that are unlocked
-            if session.mode == ExamMode.ARCHIVE and session.can_view:
-                allowed.append(session.id)
-        else:
-            if session.can_view:
-                allowed.append(session.id)
+        if session.can_view:
+            allowed.append(session.id)
     return allowed
 
 

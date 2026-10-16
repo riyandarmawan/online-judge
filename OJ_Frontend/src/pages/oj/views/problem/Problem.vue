@@ -94,7 +94,7 @@
                 Pengumpulan Berkas Jawaban (Pemrograman Lanjut)
               </h3>
               <p style="color: #808695; font-size: 13px;">
-                Unggah berkas arsip <b>.zip</b> berisi project / source code Java Anda. Mahasiswa <b>tidak perlu login</b>.
+                Unggah berkas arsip <b>.zip</b> berisi project / source code Java Anda. Jawaban tercatat atas akun yang sedang masuk.
               </p>
             </div>
 
@@ -125,14 +125,14 @@
               <Row :gutter="16">
                 <Col :span="12">
                   <FormItem label="NIM Mahasiswa" required>
-                    <Input v-model="zipForm.nim" placeholder="Contoh: 2508394" size="large">
+                    <Input v-model="zipForm.nim" placeholder="Contoh: 2508394" size="large" disabled>
                       <Icon type="ios-person-outline" slot="prepend"></Icon>
                     </Input>
                   </FormItem>
                 </Col>
                 <Col :span="12">
                   <FormItem label="Nama Lengkap Mahasiswa" required>
-                    <Input v-model="zipForm.name" placeholder="Contoh: Budi Santoso" size="large">
+                    <Input v-model="zipForm.name" placeholder="Contoh: Budi Santoso" size="large" disabled>
                       <Icon type="ios-contact-outline" slot="prepend"></Icon>
                     </Input>
                   </FormItem>
@@ -384,10 +384,11 @@
     },
     mounted () {
       this.$store.commit(types.CHANGE_CONTEST_ITEM_VISIBLE, {menu: false})
+      this.fillZipIdentity()
       this.init()
     },
     methods: {
-      ...mapActions(['changeDomTitle']),
+      ...mapActions(['changeDomTitle', 'changeModalStatus']),
       init () {
         this.$Loading.start()
         this.contestID = this.$route.params.contestID
@@ -403,6 +404,7 @@
           problem.languages = (problem.languages || []).sort()
           this.problem = problem
           this.myZip = problem.my_zip || null
+          this.fillZipIdentity()
           if (problem.statistic_info) {
             this.changePie(problem)
           }
@@ -523,21 +525,22 @@
         const pad = n => String(n).padStart(2, '0')
         return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
       },
+      fillZipIdentity () {
+        const user = this.user || {}
+        this.zipForm.nim = user.username || ''
+        this.zipForm.name = (this.profile && this.profile.real_name) || ''
+      },
       onZipSelected (event) {
         const file = event.target.files[0] || null
         this.zipFile = file
-        if (file) {
-          const base = file.name.replace(/\.[^/.]+$/, '')
-          const parts = base.split('_')
-          if (parts.length >= 2) {
-            if (/^\d+$/.test(parts[0])) {
-              if (!this.zipForm.nim) this.zipForm.nim = parts[0]
-              if (!this.zipForm.name) this.zipForm.name = parts[1].replace(/[-_]/g, ' ')
-            }
-          }
-        }
       },
       submitZip () {
+        if (!this.isAuthenticated) {
+          this.$error('Masuk terlebih dahulu dengan NIM, nama, dan password/PIN')
+          this.changeModalStatus({visible: true, mode: 'login'})
+          return
+        }
+        this.fillZipIdentity()
         if (!this.zipFile) {
           this.$error('Pilih berkas zip terlebih dahulu')
           return
@@ -651,7 +654,7 @@
       }
     },
     computed: {
-      ...mapGetters(['problemSubmitDisabled', 'contestRuleType', 'OIContestRealTimePermission', 'contestStatus', 'isAuthenticated', 'profile']),
+      ...mapGetters(['problemSubmitDisabled', 'contestRuleType', 'OIContestRealTimePermission', 'contestStatus', 'isAuthenticated', 'profile', 'user']),
       sampleExpectedFilename () {
         const pattern = this.problem.answer_filename_template || this.problem.answer_filename || '{NIM}_{NAMA}_soal.zip'
         const nim = (this.zipForm && this.zipForm.nim && this.zipForm.nim.trim()) || '2508394'
@@ -709,6 +712,12 @@
     watch: {
       '$route' () {
         this.init()
+      },
+      isAuthenticated () {
+        this.fillZipIdentity()
+      },
+      profile () {
+        this.fillZipIdentity()
       }
     }
   }

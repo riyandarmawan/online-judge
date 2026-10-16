@@ -4,7 +4,6 @@ import zipfile
 from django.conf import settings
 from django.db import IntegrityError
 
-from account.decorators import login_required
 from problem.models import Problem
 from utils.api import APIView
 
@@ -17,6 +16,12 @@ from ..models import ExamMode, ExamSession, ExamStudentSession, ZipSubmission
 
 class ExamStatusAPI(APIView):
     def get(self, request):
+        if not request.user.is_authenticated:
+            return self.success({
+                "authenticated": False,
+                "is_dosen": False,
+                "unlocked": [],
+            })
         sessions = []
         found = {item.id: item for item in ExamSession.objects.filter(id__in=unlocked_session_ids(request))}
         for session_id in unlocked_session_ids(request):
@@ -52,17 +57,15 @@ class ExamUnlockAPI(APIView):
         is_auth = bool(user and user.is_authenticated)
 
         if not is_auth:
-            if session.mode == ExamMode.JUDGE:
-                return self.error("Untuk sesi Algoritma dan Pemrograman (C), Anda wajib Masuk (Login) terlebih dahulu.")
-        else:
-            if not user.is_admin_role():
-                existing = ExamStudentSession.objects.filter(user=user).select_related("session").first()
-                if existing:
-                    if existing.session_id != session.id:
-                        existing.session = session
-                        existing.save()
-                else:
-                    ExamStudentSession.objects.create(user=user, session=session)
+            return self.error("Anda wajib Masuk (Login) terlebih dahulu dengan NIM, nama, dan password/PIN.")
+        if not user.is_admin_role():
+            existing = ExamStudentSession.objects.filter(user=user).select_related("session").first()
+            if existing:
+                if existing.session_id != session.id:
+                    existing.session = session
+                    existing.save()
+            else:
+                ExamStudentSession.objects.create(user=user, session=session)
 
         remember_unlock(request, session.id)
 
@@ -88,26 +91,14 @@ class ZipAnswerAPI(APIView):
         problem_id = request.GET.get("problem_id")
         if not problem_id:
             return self.error("problem_id wajib diisi.")
-        if request.user.is_authenticated:
-            answers = ZipSubmission.objects.filter(problem_id=problem_id, user=request.user)
-            return self.success([{
-                "id": item.id,
-                "original_name": item.original_name,
-                "create_time": item.create_time.isoformat(),
-            } for item in answers])
-        else:
-            nim = request.GET.get("nim")
-            if nim:
-                answers = ZipSubmission.objects.filter(problem_id=problem_id, user__username=nim)
-                return self.success([{
-                    "id": item.id,
-                    "original_name": item.original_name,
-                    "create_time": item.create_time.isoformat(),
-                } for item in answers])
-            cached = request.session.get("my_zip_" + str(problem_id))
-            if cached:
-                return self.success([cached])
-            return self.success([])
+        if not request.user.is_authenticated:
+            return self.error("Anda wajib Masuk (Login) terlebih dahulu dengan NIM, nama, dan password/PIN.")
+        answers = ZipSubmission.objects.filter(problem_id=problem_id, user=request.user)
+        return self.success([{
+            "id": item.id,
+            "original_name": item.original_name,
+            "create_time": item.create_time.isoformat(),
+        } for item in answers])
 
     def post(self, request):
         problem_id = request.POST.get("problem_id")
@@ -121,6 +112,8 @@ class ZipAnswerAPI(APIView):
         session = problem.exam_session
         if not session or session.mode != ExamMode.ARCHIVE:
             return self.error("Soal ini tidak menerima berkas zip.")
+        if not request.user.is_authenticated:
+            return self.error("Anda wajib Masuk (Login) terlebih dahulu dengan NIM, nama, dan password/PIN.")
         if not student_can_manage(request):
             if session.id not in unlocked_session_ids(request):
                 return self.error("Masukkan kode akses sebelum mengumpulkan jawaban.")
@@ -129,36 +122,16 @@ class ZipAnswerAPI(APIView):
             if not session.can_submit:
                 return self.error("Akses pengumpulan jawaban sedang ditutup.")
 
-        nim = ""
-        student_name = ""
-        if request.user.is_authenticated:
-            nim = request.user.username
-            profile = getattr(request.user, "userprofile", None)
-            student_name = profile.real_name if profile else ""
-
-        client_nim = str(request.POST.get("nim") or "").strip()
-        client_name = str(request.POST.get("name") or request.POST.get("student_name") or "").strip()
-        if client_nim:
-            nim = client_nim
-        if client_name:
-            student_name = client_name
+        nim = request.user.username
+        profile = getattr(request.user, "userprofile", None)
+        student_name = profile.real_name if profile else ""
 
         original = os.path.basename(uploaded.name).strip()
-
-        if not nim or not student_name:
-            import re
-            base = os.path.splitext(original)[0]
-            parts = base.split("_")
-            if len(parts) >= 2 and re.match(r"^\d+$", parts[0]):
-                if not nim:
-                    nim = parts[0]
-                if not student_name:
-                    student_name = parts[1].replace("-", " ")
 
         if not nim:
             return self.error("NIM mahasiswa wajib diisi.")
         if not student_name:
-            return self.error("Nama lengkap mahasiswa wajib diisi.")
+            return self.error("Nama lengkap belum terisi. Masuk ulang dan isi nama lengkap.")
 
         expected_raw = (problem.answer_filename or "").strip()
         valid, msg = check_answer_filename(original, expected_raw, nim, student_name)
@@ -180,22 +153,9 @@ class ZipAnswerAPI(APIView):
             for chunk in uploaded.chunks():
                 output.write(chunk)
 
-        from account.models import User, AdminType, UserProfile
-        user, _ = User.objects.get_or_create(
-            username=nim,
-            defaults={
-                "email": None,
-                "admin_type": AdminType.REGULAR_USER,
-            }
-        )
-        profile, _ = UserProfile.objects.get_or_create(user=user)
-        if student_name and profile.real_name != student_name:
-            profile.real_name = student_name
-            profile.save(update_fields=["real_name"])
-
         try:
             answer = ZipSubmission.objects.create(
-                user=user,
+                user=request.user,
                 problem=problem,
                 session=session,
                 original_name=original,

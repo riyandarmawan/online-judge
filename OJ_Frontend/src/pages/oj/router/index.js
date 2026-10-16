@@ -25,7 +25,7 @@ router.beforeEach((to, from, next) => {
   Vue.prototype.$Loading.start()
   if (to.matched.some(record => record.meta.requiresAuth)) {
     if (!storage.get(STORAGE_KEY.AUTHED)) {
-      Vue.prototype.$error('Please login first')
+      Vue.prototype.$error('Masuk terlebih dahulu dengan NIM, nama, dan password/PIN')
       store.commit(types.CHANGE_MODAL_STATUS, {mode: 'login', visible: true})
       next({
         name: 'home'

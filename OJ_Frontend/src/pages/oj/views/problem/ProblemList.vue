@@ -28,7 +28,7 @@
         </ul>
       </div>
       <Alert v-if="!loadings.table && problemList.length === 0" type="warning" show-icon style="margin-bottom: 12px">
-        Soal muncul setelah kode akses benar dan dosen membuka akses melihat soal.
+        Soal muncul setelah Anda masuk, memasukkan kode akses, dan dosen membuka akses melihat soal.
       </Alert>
       <Table style="width: 100%; font-size: 16px;"
              :columns="problemTableColumns"

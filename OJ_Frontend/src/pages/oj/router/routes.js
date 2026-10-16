@@ -25,31 +25,31 @@ export default [
   {
     name: 'problem-list',
     path: '/problem',
-    meta: {title: 'Soal'},
+    meta: {title: 'Soal', requiresAuth: true},
     component: ProblemList
   },
   {
     name: 'problem-details',
     path: '/problem/:problemID',
-    meta: {title: 'Detail Soal'},
+    meta: {title: 'Detail Soal', requiresAuth: true},
     component: Problem
   },
   {
     name: 'submission-list',
     path: '/status',
-    meta: {title: 'Pengumpulan'},
+    meta: {title: 'Pengumpulan', requiresAuth: true},
     component: SubmissionList
   },
   {
     name: 'submission-details',
     path: '/status/:id/',
-    meta: {title: 'Detail Pengumpulan'},
+    meta: {title: 'Detail Pengumpulan', requiresAuth: true},
     component: SubmissionDetails
   },
   {
     name: 'oi-rank',
     path: '/oi-rank',
-    meta: {title: 'Peringkat OI'},
+    meta: {title: 'Peringkat OI', requiresAuth: true},
     component: OIRank
   },
   {

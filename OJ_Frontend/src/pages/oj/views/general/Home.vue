@@ -3,10 +3,16 @@
     <panel shadow :padding="24">
       <div slot="title">Ujian</div>
       <p class="lead">
-        Soal dan pengumpulan jawaban hanya terbuka pada waktu yang diatur dosen.
+        Algoritma Pemrograman dan Pemrograman Lanjut wajib masuk dengan NIM, nama, dan password/PIN.
+        Setelah itu masukkan kode akses sesi. Soal dan pengumpulan hanya terbuka pada waktu yang diatur dosen.
       </p>
-      <!-- Input Kode Akses (dapat diakses oleh siapa pun tanpa harus login) -->
-      <div v-if="!unlocked.length || isDosen" class="code-box">
+      <Alert v-if="!isAuthenticated" type="warning" show-icon>
+        Anda belum masuk. Klik tombol di bawah, lalu isi NIM, nama lengkap, dan password/PIN.
+        <div style="margin-top: 12px;">
+          <Button type="primary" @click="openLogin">Masuk</Button>
+        </div>
+      </Alert>
+      <div v-if="isAuthenticated && (!unlocked.length || isDosen)" class="code-box">
         <Input v-model="accessCode" placeholder="Masukkan kode akses sesi ujian" @on-enter="unlock" style="max-width: 320px"/>
         <Button type="primary" :loading="loading" @click="unlock" style="margin-left: 8px">
           {{ isDosen ? 'Buka sesi' : 'Masuk sesi' }}
@@ -72,6 +78,11 @@
         })
       },
       unlock () {
+        if (!this.isAuthenticated) {
+          this.$error('Masuk terlebih dahulu dengan NIM, nama, dan password/PIN')
+          this.openLogin()
+          return
+        }
         if (!this.accessCode.trim()) {
           this.$error('Masukkan kode akses sesi terlebih dahulu')
           return
