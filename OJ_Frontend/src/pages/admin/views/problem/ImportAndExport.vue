@@ -138,7 +138,7 @@
         for (let p of this.selected_problems) {
           params.push('problem_id=' + p.id)
         }
-        let url = '/admin/export_problem?' + params.join('&')
+        let url = 'admin/export_problem?' + params.join('&')
         utils.downloadFile(url)
       },
       submitUpload (ref) {

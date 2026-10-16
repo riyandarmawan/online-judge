@@ -76,7 +76,12 @@ app.use((req, res, next) => {
     next()
     return
   }
-  if (/^\/admin(\/|$|\.)/.test(urlPath)) {
+  // /admin must never be a public URL. Bundles like /admin.js still need the portal cookie.
+  if (/^\/admin(\/|$)/.test(urlPath)) {
+    res.status(404).type('text').send('Not Found')
+    return
+  }
+  if (/^\/admin\./.test(urlPath)) {
     if (readCookie(req.headers.cookie, 'dosen_portal') !== dosenPortalSecret) {
       res.status(404).type('text').send('Not Found')
       return

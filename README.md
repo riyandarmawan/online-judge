@@ -40,7 +40,7 @@ Project ini **bukan website statis**. Soal, login, submit, dan penilaian butuh b
 3. Buka **http://localhost:8000** (bukan 8080).
 
    - Siswa: `http://localhost:8000`
-   - Admin: `http://localhost:8000/admin`
+   - Admin dosen: **bukan** `/admin` (path itu 404). URL rahasia tercetak saat container start, contoh `docker compose logs oj-backend | findstr Portal`
    - Super admin awal image QDUOJ: `root` / `rootroot` — **ganti segera**
 
 4. Setelah build ulang frontend:

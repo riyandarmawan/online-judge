@@ -13,6 +13,23 @@ if [ ! -f "$DATA/config/dosen_portal.key" ]; then
     echo $(cat /dev/urandom | head -1 | md5sum | head -c 32)$(cat /dev/urandom | head -1 | md5sum | head -c 16) > "$DATA/config/dosen_portal.key"
 fi
 
+PORTAL_SECRET=$(tr -cd 'A-Za-z0-9' < "$DATA/config/dosen_portal.key")
+if [ -z "$PORTAL_SECRET" ]; then
+    PORTAL_SECRET=$(cat /dev/urandom | head -1 | md5sum | head -c 32)$(cat /dev/urandom | head -1 | md5sum | head -c 16)
+    echo "$PORTAL_SECRET" > "$DATA/config/dosen_portal.key"
+fi
+cat > "$DATA/config/portal_locations.conf" <<EOF
+location = /${PORTAL_SECRET} {
+    return 302 /${PORTAL_SECRET}/;
+}
+location ~ ^/${PORTAL_SECRET}/ {
+    add_header Set-Cookie "dosen_portal=${PORTAL_SECRET}; Path=/; HttpOnly; SameSite=Lax" always;
+    root /app/dist/admin;
+    rewrite ^ /index.html break;
+}
+EOF
+echo "Portal dosen (simpan, jangan dibagikan ke mahasiswa): /${PORTAL_SECRET}/"
+
 if [ ! -f "$DATA/public/avatar/default.png" ]; then
     cp data/public/avatar/default.png $DATA/public/avatar
 fi

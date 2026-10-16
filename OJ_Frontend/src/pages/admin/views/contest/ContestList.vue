@@ -153,7 +153,7 @@
       },
       downloadSubmissions () {
         let excludeAdmin = this.excludeAdmin ? '1' : '0'
-        let url = `/admin/download_submissions?contest_id=${this.currentId}&exclude_admin=${excludeAdmin}`
+        let url = `admin/download_submissions?contest_id=${this.currentId}&exclude_admin=${excludeAdmin}`
         utils.downloadFile(url)
       },
       goEdit (contestId) {
