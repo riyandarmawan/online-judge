@@ -1,0 +1,53 @@
+# Python
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Node
+node_modules/
+OJ_Frontend/dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime / secrets / local data (jangan di-push)
+Deploy/data/
+OJ_Backend/data/log/
+OJ_Backend/data/test_case/
+OJ_Backend/data/ssl/
+OJ_Backend/data/public/upload/
+OJ_Backend/data/config/
+OJ_Backend/custom_settings.py
+.env
+.env.*
+*.sqlite3
+*.rdb
+secret.key
+
+# Logs & OS
+*.log
+.DS_Store
+Thumbs.db
+*~
+*.swp
+*.swo
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Accidental root lockfile
+/package-lock.json
+
+# Accidental leftover files
+OJ_Frontend/node
+OJ_Frontend/onlinejudge@2.7.6
+
+# Nested clone metadata kept as backup after monorepo init
+**/.git.bak/
