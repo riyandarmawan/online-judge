@@ -2,7 +2,7 @@
 
 Sistem online judge berbasis [QingdaoU OnlineJudge 2.0](https://github.com/QingdaoU/OnlineJudge): backend Django, frontend Vue, PostgreSQL, Redis, dan Judge Server.
 
-Project ini **bukan website statis**. Soal, login, submit, dan penilaian butuh backend + database + judger. Yang bisa dihilangkan adalah **`npm run dev`**: setelah frontend di-build, akses lewat Docker di port **8000**.
+Project ini **bukan website statis**. Soal, login, submit, dan penilaian butuh backend + database + judger. Yang bisa dihilangkan adalah **`npm run dev`**: setelah frontend di-build, akses lewat Docker di port **8080**.
 
 ## Isi folder
 
@@ -37,9 +37,9 @@ Project ini **bukan website statis**. Soal, login, submit, dan penilaian butuh b
    docker compose up -d
    ```
 
-3. Buka **http://localhost:8000** (bukan 8080).
+3. Buka **http://localhost:8080**.
 
-   - Siswa: `http://localhost:8000`
+   - Siswa: `http://localhost:8080`
    - Admin dosen: **bukan** `/admin` (path itu 404). URL rahasia tercetak saat container start, contoh `docker compose logs oj-backend | findstr Portal`
    - Super admin awal image QDUOJ: `root` / `rootroot` — **ganti segera**
 
@@ -50,7 +50,7 @@ Project ini **bukan website statis**. Soal, login, submit, dan penilaian butuh b
    docker compose restart oj-backend
    ```
 
-`npm run dev` (port 8080) hanya untuk development UI dengan hot-reload.
+`npm run dev` (port **8000**) hanya untuk development UI dengan hot-reload; API tetap di-proxy ke Docker di 8080.
 
 ## Development frontend (opsional)
 
@@ -59,8 +59,8 @@ cd OJ_Frontend
 npm install
 $env:NODE_ENV = "development"
 npm run build:dll    # sekali, kecuali dependency DLL berubah
-$env:TARGET = "http://localhost:8000"
-npm run dev          # http://localhost:8080
+$env:TARGET = "http://localhost:8080"
+npm run dev          # http://localhost:8000
 ```
 
 ## Pindah device
@@ -80,7 +80,7 @@ Di device baru:
 | Yang bisa | Yang tidak |
 | --- | --- |
 | Setelah image Docker sudah di-pull, stack bisa dijalankan tanpa internet | Clone GitHub / `npm install` / pull image pertama kali butuh internet |
-| Browser ke `http://localhost:8000` di komputer yang sama, tanpa `npm run dev` | Tidak bisa jadi file HTML murni yang dibuka double-click |
+| Browser ke `http://localhost:8080` di komputer yang sama, tanpa `npm run dev` | Tidak bisa jadi file HTML murni yang dibuka double-click |
 | Pindah device offline jika Anda copy seluruh folder project **termasuk** `Deploy/data` dan image Docker (`docker save` / `docker load`) | Judger, Postgres, Redis tetap harus berjalan (via Docker) |
 
 Simpan image untuk air-gap (opsional, saat masih online):

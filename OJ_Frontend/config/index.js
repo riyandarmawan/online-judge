@@ -3,7 +3,7 @@
 // see http://vuejs-templates.github.io/webpack for documentation.
 
 const path = require('path')
-const commonTarget = process.env.TARGET || "http://localhost:8000";
+const commonTarget = process.env.TARGET || "http://localhost:8080";
 
 const commonProxy = {
   onProxyReq: (proxyReq, req, res) => {
@@ -43,7 +43,7 @@ module.exports = {
   },
   dev: {
     env: require('./dev.env'),
-    port: process.env.PORT || 8080,
+    port: process.env.PORT || 8000,
     autoOpenBrowser: true,
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
